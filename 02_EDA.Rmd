@@ -1,0 +1,59 @@
+---
+title: "02_EDA"
+output: pdf_document
+date: "2023-09-16"
+---
+```{r}
+tuesdata <- tidytuesdayR::tt_load('2022-11-01')
+data <- tuesdata$horror_movies
+```
+## Section 1
+The response variables I'm interested in are revenue, popularity, and rating.
+```{r}
+par(mfrow=c(1,3))
+revhist <- hist(data$revenue)
+pophist <- hist(data$popularity)
+rathist <- hist(data$vote_average)
+par(mfrow=c(1,1))
+```
+```{r}
+par(mfrow=c(1,3))
+revboxplot <- boxplot(data$revenue)
+popboxplot <- boxplot(data$popularity)
+ratboxplot <- boxplot(data$vote_average)
+par(mfrow=c(1,1))
+```
+## Section 2
+The explanatory variable I'm interested in is month of release.
+```{r}
+#install.packages("lubridate")
+library(lubridate)
+```
+```{r}
+df <- data.frame(release_date = as.Date(data$release_date))
+df$monthname <- month(df$release_date, label = TRUE)
+df$month <- month(df$release_date)
+hist(df$month)
+```
+## Section 3
+After considering the variables further and previous documentation, I'm not sure what the popularity variable measures. Certainly, it should say that a higher number means the movie was more popular, but in what sense? Therefore, I will not be including it as on of my response variables in my killer graph.
+```{r}
+#install.packages("dplyr")
+library(dplyr)
+```
+
+```{r}
+data$month <- df$monthname
+result <- data %>%
+  group_by(month) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE), mean_rating = mean(vote_average, na.rm = TRUE))
+print(result)
+barplot(as.numeric(as.matrix(result)[,2]),names.arg = as.matrix(result)[,1],main = "Bar Chart of Average Monthly Revenue",xlab = "Month",ylab = "Average Revenue")
+barplot(as.numeric(as.matrix(result)[,3]),names.arg = as.matrix(result)[,1],main = "Bar Chart of Average Monthly Rating",xlab = "Month",ylab = "Average Rating")
+
+```
+## Section 4
+```{r}
+save.image()
+```
+

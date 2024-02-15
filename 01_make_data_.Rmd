@@ -1,0 +1,33 @@
+---
+title: "01_make_data_"
+output: pdf_document
+date: "2023-09-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+install.packages("tidytuesdayR", repos = "https://cran.rstudio.com/")
+```
+## Section 1
+In this project, I would like to analyze a horror movie data set. The data consists of approximately 35,000 titles since the 1950s with 20 co-variates. I want to know whether there is a particular month of the year that horror movies outperform other months in terms of revenue, popularity, or rating.
+
+## Section 2
+My killer graph will be a bar graph consisting of three bars per month. One bar for averages of revenue, popularity, and rating. This way I can see whether there is a preferred month to release a horror movie, something movie producers would be interested in.
+
+
+## Section 3
+
+```{r}
+tuesdata <- tidytuesdayR::tt_load('2022-11-01')
+```
+## Section 4
+```{r}
+dim(tuesdata$horror_movies)
+```
+## Section 5
+```{r}
+save.image()
+```
+

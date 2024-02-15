@@ -1,0 +1,74 @@
+---
+title: "04_hypothesis_test"
+author: "Daniel Meskill"
+date: "2024-02-15"
+output: pdf_document
+---
+
+## Introduction
+The dataset I'm working with is on horror movies and consists of approximately 35,000 titles since the 1950s with 20 variables. I will just be working with release_date and revenue. The question of interest to me is which month of the year should a horror movie be released? People's first thought is October should be best since that's the month of Halloween. But is this what the data suggests?
+
+## Results
+The killer graph is a bar graph which answers our question. On the x-axis we have the months of the year, while on the y-axis we have the average revenue. We can read it by comparing the heights of each bar. A higher bar corresponds to a higher average revenue. Therefore, we can conclude that June has the highest expected revenue for a horror film. Not only that, but there are 4 other months with higher average revenue than the expected lead, October.
+
+```{r echo=FALSE, message=FALSE, results='hide', fig.width=4, fig.height=3, warning=FALSE}
+tuesdata <- tidytuesdayR::tt_load('2022-11-01')
+data <- tuesdata$horror_movies
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+df <- data.frame(release_date = as.Date(data$release_date))
+df$monthname <- month(df$release_date, label = TRUE)
+data$month <- df$monthname
+result <- data %>%
+  group_by(month) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE))
+result$month <- factor(result$month, levels = c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+p <- ggplot(result, aes(x=month, y=mean_revenue)) + geom_bar(stat = "identity", fill = "steelblue") + labs(title = "Monthly Revenue of Horror Movies", x = "Month", y = "Average Revenue") + theme_minimal()
+print(p)
+```
+
+A bar graph of average horror movie revenue for each month of the year. We see that October is smaller than 5 other months.
+
+## Discussion
+A testable hypothesis is whether there is a month that is significantly higher in average revenue than October. This would statistically tell us whether horror movies should be released outside of the month of Halloween.
+
+## Hypothesis Test
+To perform a test of this hypothesis, I will invoke a one-way ANOVA. From this one-way ANOVA, we can see that the p-value is less than .05 and so is significant. This means that there is a month that has a significant difference in revenue across different months.
+```{r echo=FALSE, message=FALSE}
+data$month <- as.factor(data$month)
+model <- aov(revenue ~ month, data = data) 
+summary(model)
+```
+From here we can investigate further to see if specifically October is significantly different from the other months. This is done by employing Tukey's Honest Significant Difference (HSD) test and looking at the subset of October comparisons. From this we can say that since no interval (values between lwr and upr) contains 0 that October is not significantly different from the other months in terms of revenue.
+
+```{r echo=FALSE, message=FALSE}
+tukey_result <- TukeyHSD(model)
+#print(tukey_result)
+comp <- tukey_result$month
+october_comps <- comp[grepl("Oct", rownames(comp)), ]
+print(october_comps)
+```
+
+## New Graph
+
+
+```{r echo=FALSE, message=FALSE, results='hide', fig.width=4, fig.height=3, warning=FALSE}
+
+result <- data %>%
+  group_by(month) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE),
+            stddev = sd(revenue), 
+            n = n(),
+            stderror = stddev / sqrt(n))
+result$month <- factor(result$month, levels = c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+
+
+ggplot(result, aes(x=month, y=mean_revenue)) +
+  geom_bar(stat = "identity", position = "dodge",fill = "steelblue") + 
+  geom_errorbar(aes(ymin = mean_revenue - stderror, ymax = mean_revenue + stderror), width = 0.2) +
+  theme_minimal() +
+  labs(title = "Monthly Revenue of Horror Movies", x = "Month", y = "Average Revenue")
+```
+
+This new graph contains the error bars and shows that October's revenue is not significantly different from most of the other months.
